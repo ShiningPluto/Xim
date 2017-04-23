@@ -4,17 +4,15 @@
 
 #pragma once
 
+#include <string>
+
 enum TokenType
 {
-    EOF,
+    Eof,
     Identifier,
-    Keyword,
     Number,
-    Punctuator;
-};
 
-enum PunctuatorType
-{
+    // Punctuator
     LeftSquare, // [
     RightSquare,// ]
     LeftParen, // (
@@ -24,19 +22,29 @@ enum PunctuatorType
     Period, // .
     Colon, // :
     SemiColon, // ;
-    Arrow // ->
-};
+    Arrow, // ->
 
-
-enum KeywordType
-{
-    Return,
+    // Keyword
     Def,
     Func,
-    Int
+    Int,
+    Return
 };
 
 class Token
 {
+public:
+    static std::pair<bool, TokenType> isKeyword(std::string const& s);
+
+private:
+    TokenType type;
+    std::string const* value;
+
+public:
+    Token(TokenType type_, std::string const* value_ = nullptr)
+        : type(type_), value(value_)
+    {
+
+    }
 
 };

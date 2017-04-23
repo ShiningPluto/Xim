@@ -6,17 +6,21 @@
 
 #include <string>
 #include <memory>
+#include <fstream>
+#include <unordered_set>
+
+class Token;
 
 class Lexer
 {
     std::shared_ptr<std::string> file_path;
+    std::ifstream input;
+    std::unordered_set<std::string> dictionary;
 
 public:
-    Lexer(std::shared_ptr<std::string> source)
-        : file_path(source)
-    {
+    Lexer(std::shared_ptr<std::string> source);
 
-    }
+    ~Lexer();
 
-    void run();
+    Token nextToken();
 };
