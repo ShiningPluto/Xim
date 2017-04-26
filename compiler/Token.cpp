@@ -8,7 +8,7 @@
 
 namespace
 {
-    constexpr std::unordered_map<std::string, TokenType> keyword_map
+    const std::unordered_map<std::string, TokenType> keyword_map
     {
         {"def",    TokenType::Def},
         {"func",   TokenType::Func},
