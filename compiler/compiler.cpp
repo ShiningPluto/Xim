@@ -2,6 +2,8 @@
 // Created by ximu on 4/17/17.
 //
 
+#include "Parser.h"
+
 #include <iostream>
 
 void showHelpMessage()
@@ -17,5 +19,9 @@ int main(int argc, char** argv)
         return 0;
     }
     std::cout << argv[1];
+
+    Parser parser(argv[1]);
+    parser.run();
+
     return 0;
 }

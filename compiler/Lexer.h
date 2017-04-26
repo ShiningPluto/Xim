@@ -14,16 +14,16 @@ class Token;
 
 class Lexer
 {
-    std::shared_ptr<std::string> file_path;
     std::unordered_set<std::string> dictionary;
-    std::vector<char> source_u8;
-    std::vector<char32_t> source_u32;
-    std::vector<char32_t>::iterator it;
+    std::vector<char32_t> const* source;
+    std::vector<char32_t>::const_iterator it;
 
 public:
-    Lexer(std::shared_ptr<std::string> source);
+    Lexer() = default;
 
-    ~Lexer();
+    ~Lexer() = default;
+
+    void setSource(std::vector<char32_t> const& source);
 
     Token nextToken();
 };

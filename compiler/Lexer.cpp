@@ -11,68 +11,54 @@
 #include <cctype>
 #include <fstream>
 
-Lexer::Lexer(std::shared_ptr<std::string> source)
-    : file_path(source)
+void Lexer::setSource(std::vector<char32_t> const& source)
 {
-    std::ifstream input(*file_path, std::ifstream::binary);
-    input.open(*file_path);
-    input.seekg(0, input.end);
-    source_u8.resize(input.tellg());
-    input.seekg(0, input.beg);
-    input.read(source_u8.data(), source_u8.size());
-    input.close();
-
-    std::locale locale;
-    using facet_type = std::codecvt<char32_t, char, std::mbstate_t>;
-    const facet_type& facet = std::use_facet<facet_type>(locale);
-    source_u32.resize(source_u8.size());
-    std::mbstate_t state{};
-    const char* from_next;
-    char32_t* to_next;
-    auto result = facet.in(state, source_u8.data(), source_u8.data() + source_u8.size(), from_next,
-    source_u32.data(), source_u32.data()+source_u32.size(), to_next);
-    if (result!=facet_type::ok)
-    {
-        // TODO: error handle!
-    }
-    source_u32.resize(to_next - source_u32.data());
-    it = source_u32.begin();
-}
-
-Lexer::~Lexer()
-{
-
+    this->source = &source;
+    it = source.begin();
 }
 
 Token Lexer::nextToken()
 {
-
-    if (it == source_u32.end())
+    if (it == source->end())
     {
         return Token(TokenType::Eof);
     }
     else
     {
-        char32_t tt;
-        char32_t c = *it;
-        if (c == '_' || isalpha(c))
+        while(it!=source->end() && *it != '_' && !isalpha(*it))
         {
-            std::ostringstream s;
-            while(c=='_' || isalpha(c) || isdigit(c))
-            {
-                s.put(static_cast<char>(input.get()));
-                c = input.peek();
-            }
-            auto it = dictionary.insert(s.str()).first;
-            auto it2 = Token::isKeyword(*it);
-            if (it2.first)
-                return Token(it2.second);
-            else
-                return Token(TokenType::Identifier, &(*it));
+            ++it;
         }
-        else if (isdigit(c))
-        {
 
+        auto it2 = it;
+        if (*it2 == '_' || isalpha(*it2))
+        {
+            do
+            {
+                ++it2;
+            } while(it2!=source->end() && (*it2 == '_' || isalpha(*it2) || isdigit(*it2)));
+
+            std::vector<char> buffer(size_t(it2-it)+1, char());
+
+            std::locale locale;
+            using facet_type = std::codecvt<char32_t, char, std::mbstate_t>;
+            const facet_type& facet = std::use_facet<facet_type>(locale);
+            std::mbstate_t state{};
+            const char32_t* from_next;
+            char* to_next;
+            facet.out(state, it.base(), it2.base(), from_next, buffer.data(), buffer.data()+buffer.size(), to_next);
+            it = it2;
+
+            auto item = dictionary.insert(std::string(buffer.data())).first;
+            auto type = Token::isKeyword(*item);
+            if (type.first)
+                return Token(type.second, &(*item));
+            else
+                return Token(TokenType::Identifier, &(*item));
+        }
+        else
+        {
+            return Token(TokenType::Eof);
         }
     }
 }

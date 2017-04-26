@@ -25,3 +25,24 @@ std::pair<bool, TokenType> Token::isKeyword(std::string const& s)
     else
         return std::make_pair(true, it->second);
 }
+
+std::ostream& operator<<(std::ostream& out, Token const& token)
+{
+    switch (token.type)
+    {
+        case TokenType::Identifier:
+        {
+            out << "Identifier: " << *token.value << "\n";
+            break;
+        }
+        case TokenType::Eof:
+        {
+            out << "EOF\n";
+            break;
+        }
+        default:
+        {
+            out << "Keyword: " << *token.value << "\n";
+        }
+    }
+}

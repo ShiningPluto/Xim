@@ -5,6 +5,7 @@
 #pragma once
 
 #include <string>
+#include <ostream>
 
 enum TokenType
 {
@@ -47,4 +48,15 @@ public:
 
     }
 
+    TokenType getType()
+    {
+        return type;
+    }
+
+    std::string const& getValue()
+    {
+        return *value;
+    }
+
+    friend std::ostream& operator<<(std::ostream& out, Token const& token);
 };
