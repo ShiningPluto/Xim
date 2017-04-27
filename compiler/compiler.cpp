@@ -18,7 +18,7 @@ int main(int argc, char** argv)
         showHelpMessage();
         return 0;
     }
-    std::cout << argv[1];
+    std::cout << argv[1] << "\n\n";
 
     Parser parser(argv[1]);
     parser.run();

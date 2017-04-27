@@ -13,29 +13,15 @@ enum TokenType
     Identifier,
     Number,
 
-    // Punctuator
-    LeftSquare, // [
-    RightSquare,// ]
-    LeftParen, // (
-    RightParen, // )
-    LeftBrace, // {
-    RightBrace, // }
-    Period, // .
-    Colon, // :
-    SemiColon, // ;
-    Arrow, // ->
-
-    // Keyword
-    Def,
-    Func,
-    Int,
-    Return
+    #define TOKEN(X) X,
+    #include "Token.def"
 };
 
 class Token
 {
 public:
     static std::pair<bool, TokenType> isKeyword(std::string const& s);
+    static std::pair<bool, TokenType> isPunctuator(std::string const& s);
 
 private:
     TokenType type;

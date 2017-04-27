@@ -22,7 +22,7 @@ Parser::Parser(std::string const& source)
     int length = input.tellg();
     source_u8.resize(length);
     input.seekg(0, input.beg);
-    input.read(source_u8.data(), source_u8.size());
+    input.read(source_u8.data(), length);
     input.close();
 
     std::locale locale;

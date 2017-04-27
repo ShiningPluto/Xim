@@ -1,0 +1,32 @@
+
+#ifndef TOKEN
+#define TOKEN(X)
+#endif
+#ifndef PUNCTUATOR
+#define PUNCTUATOR(X, Y) TOKEN(X)
+#endif
+#ifndef KEYWORD
+#define KEYWORD(X, Y) TOKEN(X)
+#endif
+
+// Punctuator
+PUNCTUATOR(LeftSquare,  "[")
+PUNCTUATOR(RightSquare, "]")
+PUNCTUATOR(LeftParen,   "(")
+PUNCTUATOR(RightParen,  ")")
+PUNCTUATOR(LeftBrace,   "{")
+PUNCTUATOR(RightBrace,  "}")
+PUNCTUATOR(Period,      ".")
+PUNCTUATOR(Colon,       ":")
+PUNCTUATOR(SemiColon,   ";")
+PUNCTUATOR(Arrow,       "->")
+
+// Keyword
+KEYWORD(Def,    "def")
+KEYWORD(Func,   "func")
+KEYWORD(Int,    "int")
+KEYWORD(Return, "return")
+
+#undef KEYWORD
+#undef PUNCTUATOR
+#undef TOKEN
