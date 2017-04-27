@@ -26,17 +26,21 @@ public:
 private:
     TokenType type;
     std::string const* value;
+    size_t line;
+    size_t column;
 
 public:
-    Token(TokenType type_, std::string const* value_ = nullptr)
-        : type(type_), value(value_)
-    {
-
-    }
+    Token(size_t l, size_t c, TokenType type_ = TokenType::Eof, std::string const* value_ = nullptr);
 
     TokenType getType()
     {
         return type;
+    }
+
+    void set(TokenType type_, std::string const* value_ = nullptr)
+    {
+        type = type_;
+        value = value_;
     }
 
     std::string const& getValue()

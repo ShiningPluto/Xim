@@ -33,6 +33,12 @@ namespace
     }
 }
 
+Lexer::Lexer()
+{
+    line = 1;
+    column = 1;
+}
+
 void Lexer::setSource(std::vector<char32_t> const& source)
 {
     this->source = &source;
@@ -41,36 +47,53 @@ void Lexer::setSource(std::vector<char32_t> const& source)
 
 Token Lexer::nextToken()
 {
-    // can't handle now
+    // TODO: make sure that the input string dose not contain tab and the line end is \n
     while(it != source->end() && isspace(*it))
     {
+        if (*it == ' ')
+        {
+            column += 1;
+        }
+        else if (*it == '\t')
+        {
+            column += 4;
+        }
+        else if (*it == '\n')
+        {
+            line += 1;
+            column = 1;
+        }
         ++it;
     }
+
+    Token token(line, column);
 
     auto it2 = it;
     if (it == source->end())
     {
-        return Token(TokenType::Eof);
+        return token;
     }
     else if (*it == '_' || isalpha(*it)) // identifier or keyword
     {
         while(it2!=source->end() && (*it2 == '_' || isalnum(*it2))) ++it2;
         auto word = toString(it, it2);
+        column += it2 - it;
         it = it2;
         auto item = dictionary.insert(word).first;
         auto type = Token::isKeyword(*item);
         if (type.first)
-            return Token(type.second, &(*item));
+            token.set(type.second, &(*item));
         else
-            return Token(TokenType::Identifier, &(*item));
+            token.set(TokenType::Identifier, &(*item));
     }
     else if (isdigit(*it)) // number, just support positive integer
     {
         while(it2!=source->end() && isdigit(*it2)) ++it2;
         auto word = toString(it, it2);
+        column += it2 - it;
         it = it2;
         auto item = dictionary.insert(word).first;
-        return Token(TokenType::Number, &(*item));
+        token.set(TokenType::Number, &(*item));
     }
     else if (isPunctuationCharacter(*it)) // punctuation character
     {
@@ -89,9 +112,10 @@ Token Lexer::nextToken()
             exit(-1);
             //throw std::exception();
         }
+        column += it2 - it;
         it = it2;
         auto item = dictionary.insert(word).first;
-        return Token(type.second, &(*item));
+        token.set(type.second, &(*item));
     }
     else
     {
@@ -99,5 +123,6 @@ Token Lexer::nextToken()
         std::cout << "Invalid character: " << word << std::endl;
         exit(-1);
     }
+    return token;
 }
 

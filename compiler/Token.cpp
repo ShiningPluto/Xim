@@ -40,8 +40,15 @@ std::pair<bool, TokenType> Token::isPunctuator(std::string const& s)
     return isOperator(punctuator_map, s);
 }
 
+Token::Token(size_t l, size_t c, TokenType type_, std::string const* value_)
+    : type(type_), value(value_), line(l), column(c)
+{
+
+}
+
 std::ostream& operator<<(std::ostream& out, Token const& token)
 {
+    out << token.line << ':' << token.column << ' ';
     switch (token.type)
     {
         case TokenType::Identifier: {

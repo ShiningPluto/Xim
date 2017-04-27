@@ -17,9 +17,11 @@ class Lexer
     std::unordered_set<std::string> dictionary;
     std::vector<char32_t> const* source;
     std::vector<char32_t>::const_iterator it;
+    size_t line;
+    size_t column;
 
 public:
-    Lexer() = default;
+    Lexer();
 
     ~Lexer() = default;
 
