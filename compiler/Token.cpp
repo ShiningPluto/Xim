@@ -71,4 +71,5 @@ std::ostream& operator<<(std::ostream& out, Token const& token)
         }
     }
     out << "\n";
+    return out;
 }

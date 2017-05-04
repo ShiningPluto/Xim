@@ -5,10 +5,34 @@
 #include "Parser.h"
 
 #include "Token.h"
+#include "AST.h"
 
 #include <locale>
 #include <fstream>
 #include <iostream>
+
+namespace
+{
+    void assertTokenType(Token& token, TokenType type)
+    {
+        if (token.getType() != type)
+        {
+            std::cerr << "Expected token: \n";
+        }
+    }
+
+    void eatOperator(std::vector<Token>::iterator &it, TokenType type)
+    {
+        if (it->getType() == type)
+        {
+            ++it;
+        }
+        else
+        {
+            std::cerr << "Expected token: \n";
+        }
+    }
+}
 
 Parser::Parser(std::string const& source)
     : file_path(source)
@@ -48,8 +72,40 @@ void Parser::run()
     auto token = lexer.nextToken();
     while (token.getType() != TokenType::Eof)
     {
+        tokens.push_back(token);
         std::cout << token;
         token = lexer.nextToken();
     }
     std::cout << token;
+
+    parse();
+}
+
+void Parser::parse()
+{
+    auto it = tokens.begin();
+
+    if (it->getType() == TokenType::Def) readDefinition(it+1);
+}
+
+void Parser::readDefinition(std::vector<Token>::iterator it)
+{
+    std::string const& name = it->getValue(); ++it;
+    eatOperator(it, TokenType::Colon);
+
+    if (it->getType()==TokenType::Func)
+    {
+        readFunctionDef(it+1);
+    }
+
+}
+
+void Parser::readFunctionDef(std::vector<Token>::iterator it)
+{
+
+    eatOperator(it, TokenType::LeftParen);
+
+
+    eatOperator(it, TokenType::RightParen);
+    
 }
