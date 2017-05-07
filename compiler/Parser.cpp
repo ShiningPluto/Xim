@@ -7,9 +7,13 @@
 #include "Token.h"
 #include "AST.h"
 
+#include <llvm/IR/Type.h>
+#include <llvm/IR/LLVMContext.h>
+
 #include <locale>
 #include <fstream>
 #include <iostream>
+#include <map>
 
 namespace
 {
@@ -31,6 +35,16 @@ namespace
         {
             std::cerr << "Expected token: \n";
         }
+    }
+
+    llvm::LLVMContext context;
+
+
+    std::map<TokenType, llvm::Type*> builtin_type_map;
+
+    void constructBuiltinTypeMap(std::map<TokenType, llvm::Type*> & map)
+    {
+        map.insert(std::make_pair(TokenType::Int, llvm::Type::getInt32Ty(context)));
     }
 }
 
@@ -85,27 +99,72 @@ void Parser::parse()
 {
     auto it = tokens.begin();
 
+    while (it !=)
     if (it->getType() == TokenType::Def) readDefinition(it+1);
 }
 
-void Parser::readDefinition(std::vector<Token>::iterator it)
+AST* Parser::readDefinition(std::vector<Token>::iterator it)
 {
     std::string const& name = it->getValue(); ++it;
     eatOperator(it, TokenType::Colon);
 
     if (it->getType()==TokenType::Func)
     {
-        readFunctionDef(it+1);
+        return readFunctionDef(it+1);
     }
-
 }
 
-void Parser::readFunctionDef(std::vector<Token>::iterator it)
+AST* Parser::readFunctionDef(std::vector<Token>::iterator it)
 {
-
+    auto result = new FunctionDefAST();
+    result->proto = new FunctionProtoAST();
     eatOperator(it, TokenType::LeftParen);
+    if (it->getType()!=TokenType::RightParen) // parameters
+    {
+        while (true)
+        {
+            result->proto->parameter_types.push_back(new TypeRefAST(*it));
+            ++it;
+            if (it->getType()==TokenType::Identifier)
+            {
+                result->proto->parameter_names.push_back(it.base());
+                ++it;
+            }
+            else
+            {
+                result->proto->parameter_names.push_back(nullptr)
+            }
 
-
+            if (it->getType() == TokenType::RightParen)
+            {
+                break;
+            }
+            else
+            {
+                eatOperator(it, TokenType::Comma);
+            }
+        }
+    }
     eatOperator(it, TokenType::RightParen);
-    
+
+    eatOperator(it, TokenType::Arrow);
+
+    result->proto->return_type = new TypeRefAST(*it);
+    ++it;
+
+    eatOperator(it, TokenType::LeftBrace);
+    while (it->getType()!= TokenType::RightBrace)
+    {
+        result->body.push_back(parseExpression(it));
+    }
+}
+
+ExpressionAST *Parser::parseExpression(std::vector<Token>::iterator &it)
+{
+    if (it->getType() == TokenType::Return)
+    {
+        ++it;
+        return new ReturnAST(parseExpression(it));
+    }
+    return nullptr;
 }

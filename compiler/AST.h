@@ -4,12 +4,17 @@
 
 #pragma once
 
+#include "Token.h"
+
 #include <string>
 #include <vector>
 
 enum ASTType
 {
+    TypeRef,
+    Expression,
     AST_FUNCTION_DEF,
+    AST_FUNCTION_PROTO,
     AST_RETURN
 };
 
@@ -19,13 +24,55 @@ public:
     virtual int getType() const = 0;
 };
 
+class TypeRefAST : public AST
+{
+    Token token;
+public:
+    TypeRefAST();
+
+    TypeRefAST(Token token);
+
+    int getType() const override
+    {
+        return ASTType::TypeRef;
+    }
+};
+
+class ExpressionAST : public AST
+{
+public:
+    ExpressionAST() = default;
+
+    int getType() const override
+    {
+        return ASTType::Expression;
+    }
+};
+
+class FunctionProtoAST : public AST
+{
+public:
+    std::vector<TypeRefAST*> parameter_types;
+    std::vector<Token*> parameter_names;
+    TypeRefAST* return_type;
+
+    FunctionProtoAST();
+
+    int getType() const override
+    {
+        return ASTType::AST_FUNCTION_PROTO;
+    }
+};
+
 class FunctionDefAST : public AST
 {
     std::string name;
     std::vector<std::string> args_name;
-    std::vector<AST*> body;
 public:
-    FunctionDefAST(std::string, std::vector<std::string>, std::vector<AST*>);
+    std::vector<AST*> body;
+    FunctionProtoAST* proto;
+
+    FunctionDefAST() = default;
 
     int getType() const override
     {
@@ -33,11 +80,11 @@ public:
     }
 };
 
-class ReturnAST : public AST
+class ReturnAST : public ExpressionAST
 {
-    AST* expr;
+    ExpressionAST* expr;
 public:
-    ReturnAST(AST*);
+    ReturnAST(ExpressionAST*);
 
     int getType() const override
     {

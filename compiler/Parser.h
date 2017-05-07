@@ -6,6 +6,7 @@
 
 #include "Lexer.h"
 #include "Token.h"
+#include "AST.h"
 
 #include <string>
 #include <memory>
@@ -24,6 +25,7 @@ class Parser
 
     std::vector<Token> tokens;
     std::vector<AST*> program;
+    ASTVector ast_nodes;
 
 public:
     Parser(std::string const& source);
@@ -32,7 +34,9 @@ public:
 
     void parse();
 
-    void readDefinition(TokenVector::iterator it);
+    AST* readDefinition(TokenVector::iterator it);
 
-    void readFunctionDef(TokenVector::iterator it);
+    AST* readFunctionDef(TokenVector::iterator it);
+
+    ExpressionAST* parseExpression(TokenVector::iterator& it);
 };
