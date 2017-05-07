@@ -6,6 +6,11 @@
 
 #include "Token.h"
 
+#include <llvm/IR/Value.h>
+#include <llvm/IR/Type.h>
+#include <llvm/IR/Constants.h>
+#include <llvm/ADT/APSInt.h>
+
 #include <string>
 #include <vector>
 
@@ -15,7 +20,8 @@ enum ASTType
     Expression,
     AST_FUNCTION_DEF,
     AST_FUNCTION_PROTO,
-    AST_RETURN
+    AST_RETURN,
+    Integer
 };
 
 class AST
@@ -28,7 +34,7 @@ class TypeRefAST : public AST
 {
     Token token;
 public:
-    TypeRefAST();
+    TypeRefAST() = default;
 
     TypeRefAST(Token token);
 
@@ -56,7 +62,7 @@ public:
     std::vector<Token*> parameter_names;
     TypeRefAST* return_type;
 
-    FunctionProtoAST();
+    FunctionProtoAST() = default;
 
     int getType() const override
     {
@@ -66,9 +72,9 @@ public:
 
 class FunctionDefAST : public AST
 {
-    std::string name;
     std::vector<std::string> args_name;
 public:
+    Token name;
     std::vector<AST*> body;
     FunctionProtoAST* proto;
 
@@ -80,7 +86,7 @@ public:
     }
 };
 
-class ReturnAST : public ExpressionAST
+class ReturnAST : public AST
 {
     ExpressionAST* expr;
 public:
@@ -89,5 +95,18 @@ public:
     int getType() const override
     {
         return ASTType::AST_RETURN;
+    }
+};
+
+class IntegerAST : public ExpressionAST
+{
+    llvm::Value* value;
+    llvm::APSInt v;
+public:
+    IntegerAST(llvm::ConstantInt*);
+
+    int getType() const override
+    {
+        return ASTType::Integer;
     }
 };

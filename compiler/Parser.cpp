@@ -9,6 +9,8 @@
 
 #include <llvm/IR/Type.h>
 #include <llvm/IR/LLVMContext.h>
+#include <llvm/ADT/APInt.h>
+#include <llvm/ADT/StringRef.h>
 
 #include <locale>
 #include <fstream>
@@ -17,13 +19,13 @@
 
 namespace
 {
-    void assertTokenType(Token& token, TokenType type)
-    {
-        if (token.getType() != type)
-        {
-            std::cerr << "Expected token: \n";
-        }
-    }
+//    void assertTokenType(Token& token, TokenType type)
+//    {
+//        if (token.getType() != type)
+//        {
+//            std::cerr << "Expected token: \n";
+//        }
+//    }
 
     void eatOperator(std::vector<Token>::iterator &it, TokenType type)
     {
@@ -79,6 +81,8 @@ Parser::Parser(std::string const& source)
     source_u32.resize(to_next - source_u32.data());
 
     lexer.setSource(source_u32);
+
+    constructBuiltinTypeMap(builtin_type_map);
 }
 
 void Parser::run()
@@ -99,22 +103,33 @@ void Parser::parse()
 {
     auto it = tokens.begin();
 
-    while (it !=)
-    if (it->getType() == TokenType::Def) readDefinition(it+1);
-}
-
-AST* Parser::readDefinition(std::vector<Token>::iterator it)
-{
-    std::string const& name = it->getValue(); ++it;
-    eatOperator(it, TokenType::Colon);
-
-    if (it->getType()==TokenType::Func)
+    while (it != tokens.end())
     {
-        return readFunctionDef(it+1);
+        if (it->getType() == TokenType::Def)
+        {
+            ++it;
+            program.push_back(parseDefinition(it));
+        }
     }
 }
 
-AST* Parser::readFunctionDef(std::vector<Token>::iterator it)
+AST* Parser::parseDefinition(std::vector<Token>::iterator& it)
+{
+    auto name = *it; ++it;
+    eatOperator(it, TokenType::Colon);
+    FunctionDefAST* result = nullptr;
+
+    if (it->getType()==TokenType::Func)
+    {
+        ++it;
+        result = parseFunctionDef(it);
+        result->name = name;
+    }
+
+    return result;
+}
+
+FunctionDefAST* Parser::parseFunctionDef(std::vector<Token>::iterator& it)
 {
     auto result = new FunctionDefAST();
     result->proto = new FunctionProtoAST();
@@ -132,7 +147,7 @@ AST* Parser::readFunctionDef(std::vector<Token>::iterator it)
             }
             else
             {
-                result->proto->parameter_names.push_back(nullptr)
+                result->proto->parameter_names.push_back(nullptr);
             }
 
             if (it->getType() == TokenType::RightParen)
@@ -155,16 +170,29 @@ AST* Parser::readFunctionDef(std::vector<Token>::iterator it)
     eatOperator(it, TokenType::LeftBrace);
     while (it->getType()!= TokenType::RightBrace)
     {
-        result->body.push_back(parseExpression(it));
+        if (it->getType() == TokenType::Return)
+        {
+            ++it;
+            result->body.push_back(new ReturnAST(parseExpression(it)));
+        }
+        else
+        {
+            result->body.push_back(parseExpression(it));
+        }
     }
+    eatOperator(it, TokenType::RightBrace);
+
+    return result;
 }
 
 ExpressionAST *Parser::parseExpression(std::vector<Token>::iterator &it)
 {
-    if (it->getType() == TokenType::Return)
+    if (it->getType() == TokenType::Number)
     {
+        llvm::APInt v(64, llvm::StringRef(it->getValue()), 10);
         ++it;
-        return new ReturnAST(parseExpression(it));
+        eatOperator(it, TokenType::SemiColon);
+        return new IntegerAST(llvm::ConstantInt::get(context, v));
     }
     return nullptr;
 }

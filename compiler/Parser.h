@@ -34,9 +34,9 @@ public:
 
     void parse();
 
-    AST* readDefinition(TokenVector::iterator it);
+    AST* parseDefinition(TokenVector::iterator& it);
 
-    AST* readFunctionDef(TokenVector::iterator it);
+    FunctionDefAST* parseFunctionDef(TokenVector::iterator& it);
 
     ExpressionAST* parseExpression(TokenVector::iterator& it);
 };

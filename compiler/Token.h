@@ -30,6 +30,8 @@ private:
     size_t column;
 
 public:
+    Token() = default;
+
     Token(size_t l, size_t c, TokenType type_ = TokenType::Eof, std::string const* value_ = nullptr);
 
     TokenType getType()
