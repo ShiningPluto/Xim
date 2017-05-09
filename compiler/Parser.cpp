@@ -7,8 +7,9 @@
 #include "Token.h"
 #include "AST.h"
 
-#include <llvm/IR/Type.h>
 #include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Module.h>
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/StringRef.h>
 
@@ -40,13 +41,14 @@ namespace
     }
 
     llvm::LLVMContext context;
-
+    llvm::IRBuilder<> builder(context);
+    llvm::Module * module;
 
     std::map<TokenType, llvm::Type*> builtin_type_map;
 
     void constructBuiltinTypeMap(std::map<TokenType, llvm::Type*> & map)
     {
-        map.insert(std::make_pair(TokenType::Int, llvm::Type::getInt32Ty(context)));
+        map.insert(std::make_pair(TokenType::Int, builder.getInt32Ty()));
     }
 }
 
