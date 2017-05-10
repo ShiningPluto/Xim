@@ -9,6 +9,7 @@
 #include <llvm/IR/Value.h>
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Constants.h>
+#include <llvm/IR/IRBuilder.h>
 #include <llvm/ADT/APSInt.h>
 
 #include <string>
@@ -34,6 +35,8 @@ class TypeRefAST : public AST
 {
     Token token;
 public:
+    llvm::Type* type;
+
     TypeRefAST() = default;
 
     TypeRefAST(Token token);
@@ -42,6 +45,8 @@ public:
     {
         return ASTType::TypeRef;
     }
+
+    llvm::Type* genCode(llvm::LLVMContext& context);
 };
 
 class ExpressionAST : public AST
@@ -61,6 +66,7 @@ public:
     std::vector<TypeRefAST*> parameter_types;
     std::vector<Token*> parameter_names;
     TypeRefAST* return_type;
+    llvm::FunctionType* type;
 
     FunctionProtoAST() = default;
 
@@ -68,6 +74,8 @@ public:
     {
         return ASTType::AST_FUNCTION_PROTO;
     }
+
+    llvm::FunctionType* genCode(llvm::LLVMContext& context);
 };
 
 class FunctionDefAST : public AST
@@ -77,6 +85,7 @@ public:
     Token name;
     std::vector<AST*> body;
     FunctionProtoAST* proto;
+    llvm::Function* llvm_func;
 
     FunctionDefAST() = default;
 
@@ -84,6 +93,8 @@ public:
     {
         return ASTType::AST_FUNCTION_DEF;
     }
+
+    llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module);
 };
 
 class ReturnAST : public AST
