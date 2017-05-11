@@ -7,6 +7,8 @@
 #include "Token.h"
 #include "AST.h"
 
+#include <llvm/Support/raw_ostream.h>
+#include <llvm/Support/FileSystem.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
@@ -96,14 +98,20 @@ void Parser::run()
         std::cout << token;
         token = lexer.nextToken();
     }
-    std::cout << token;
+    std::cout << token << "\n";
 
     parse();
 
+    module = new llvm::Module("test", context);
     for (AST* stmt : program)
     {
         stmt->genCode(builder, module);
     }
+
+    std::error_code error_code;
+    llvm::raw_fd_ostream out("return.ll", error_code, llvm::sys::fs::OpenFlags::F_RW);
+    module->print(out, nullptr);
+    module->dump();
 }
 
 void Parser::parse()

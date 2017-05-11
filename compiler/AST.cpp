@@ -7,6 +7,12 @@
 #include <llvm/IR/Function.h>
 #include <llvm/IR/Module.h>
 
+//llvm::Value* convertType(llvm::Value* val, llvm::Type* to)
+//{
+//
+//}
+
+
 TypeRefAST::TypeRefAST(Token token)
     : token(token)
 {
@@ -32,7 +38,8 @@ ReturnAST::ReturnAST(ExpressionAST * expr)
 
 llvm::Value *ReturnAST::genCode(llvm::IRBuilder<> &builder, llvm::Module *module)
 {
-    return nullptr;
+    //return builder.CreateRet(expr->genCode(builder, module));
+    return expr->genCode(builder, module);
 }
 
 IntegerAST::IntegerAST(llvm::ConstantInt * ptr)
@@ -42,7 +49,7 @@ IntegerAST::IntegerAST(llvm::ConstantInt * ptr)
 
 llvm::Value *IntegerAST::genCode(llvm::IRBuilder<> &builder, llvm::Module *module)
 {
-    return nullptr;
+    return value;
 }
 
 llvm::Value *FunctionDefAST::genCode(llvm::IRBuilder<>& builder, llvm::Module* module)
@@ -61,7 +68,11 @@ llvm::Value *FunctionDefAST::genCode(llvm::IRBuilder<>& builder, llvm::Module* m
 
         for (AST* stmt : body)
         {
-            stmt->genCode(builder, module);
+            auto temp = stmt->genCode(builder, module);
+            if (stmt->getType() == ASTType::AST_RETURN)
+            {
+                builder.CreateRet(builder.CreateTruncOrBitCast(temp, llvm_func_type->getReturnType()));
+            }
         }
     }
 
