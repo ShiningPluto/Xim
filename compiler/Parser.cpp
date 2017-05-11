@@ -99,6 +99,11 @@ void Parser::run()
     std::cout << token;
 
     parse();
+
+    for (AST* stmt : program)
+    {
+        stmt->genCode(builder, module);
+    }
 }
 
 void Parser::parse()

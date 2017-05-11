@@ -27,7 +27,7 @@ namespace
             return std::make_pair(false, TokenType::Eof);
         else
             return std::make_pair(true, it->second);
-    };
+    }
 }
 
 std::pair<bool, TokenType> Token::isKeyword(std::string const& s)

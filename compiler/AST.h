@@ -29,6 +29,7 @@ class AST
 {
 public:
     virtual int getType() const = 0;
+    virtual llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) = 0;
 };
 
 class TypeRefAST : public AST
@@ -46,7 +47,7 @@ public:
         return ASTType::TypeRef;
     }
 
-    llvm::Type* genCode(llvm::LLVMContext& context);
+    llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;
 };
 
 class ExpressionAST : public AST
@@ -58,6 +59,8 @@ public:
     {
         return ASTType::Expression;
     }
+
+    llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;
 };
 
 class FunctionProtoAST : public AST
@@ -75,7 +78,7 @@ public:
         return ASTType::AST_FUNCTION_PROTO;
     }
 
-    llvm::FunctionType* genCode(llvm::LLVMContext& context);
+    llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;
 };
 
 class FunctionDefAST : public AST
@@ -94,7 +97,7 @@ public:
         return ASTType::AST_FUNCTION_DEF;
     }
 
-    llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module);
+    llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;
 };
 
 class ReturnAST : public AST
@@ -107,6 +110,8 @@ public:
     {
         return ASTType::AST_RETURN;
     }
+
+    llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;
 };
 
 class IntegerAST : public ExpressionAST
@@ -120,4 +125,6 @@ public:
     {
         return ASTType::Integer;
     }
+
+    llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;
 };
