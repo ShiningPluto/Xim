@@ -109,7 +109,7 @@ void Parser::run()
     }
 
     std::error_code error_code;
-    llvm::raw_fd_ostream out("return.ll", error_code, llvm::sys::fs::OpenFlags::F_RW);
+    llvm::raw_fd_ostream out("a.ll", error_code, llvm::sys::fs::OpenFlags::F_RW);
     module->print(out, nullptr);
     module->dump();
 }
@@ -124,6 +124,11 @@ void Parser::parse()
         {
             ++it;
             program.push_back(parseDefinition(it));
+        }
+        else if (it->getType() == TokenType::Var)
+        {
+            ++it;
+            program.push_back(parseVariableDef(it));
         }
     }
 }
@@ -188,7 +193,7 @@ FunctionDefAST* Parser::parseFunctionDef(std::vector<Token>::iterator& it)
         if (it->getType() == TokenType::Return)
         {
             ++it;
-            result->body.push_back(new ReturnAST(parseExpression(it)));
+            result->body.push_back(new ReturnAST(result->proto->return_type, parseExpression(it)));
         }
         else
         {
@@ -202,12 +207,32 @@ FunctionDefAST* Parser::parseFunctionDef(std::vector<Token>::iterator& it)
 
 ExpressionAST *Parser::parseExpression(std::vector<Token>::iterator &it)
 {
-    if (it->getType() == TokenType::Number)
+    ExpressionAST* result = nullptr;
+    if (it->getType() == TokenType::Number) // integer literal
     {
         llvm::APInt v(64, llvm::StringRef(it->getValue()), 10);
         ++it;
         eatOperator(it, TokenType::SemiColon);
-        return new IntegerAST(llvm::ConstantInt::get(context, v));
+        result = new IntegerAST(llvm::ConstantInt::get(context, v));
     }
-    return nullptr;
+    else if(it->getType() == TokenType::Identifier) // global variable
+    {
+        result = new VariableRefAST(*it);
+        ++it;
+        eatOperator(it, TokenType::SemiColon);
+    }
+    return result;
+}
+
+VariableDefAST* Parser::parseVariableDef(std::vector<Token>::iterator &it)
+{
+    auto result = new VariableDefAST();
+    result->name = *it;
+    ++it;
+    eatOperator(it, TokenType::Colon);
+    result->type = new TypeRefAST(*it);
+    ++it;
+    eatOperator(it, TokenType::Equal);
+    result->initial_value = parseExpression(it);
+    return result;
 }

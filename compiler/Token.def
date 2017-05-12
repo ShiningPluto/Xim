@@ -28,6 +28,7 @@ KEYWORD(Def,    "def")
 KEYWORD(Func,   "func")
 KEYWORD(Int,    "int")
 KEYWORD(Return, "return")
+KEYWORD(Var,    "var")
 
 #undef KEYWORD
 #undef PUNCTUATOR

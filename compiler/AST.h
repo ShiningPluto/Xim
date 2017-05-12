@@ -22,7 +22,9 @@ enum ASTType
     FunctionDef,
     FunctionProto,
     ReturnStatement,
-    Integer
+    Integer,
+    VariableDef,
+    VariableRef
 };
 
 class AST
@@ -38,8 +40,6 @@ class TypeRefAST : public AST
 public:
     llvm::Type* type;
 
-    TypeRefAST() = default;
-
     TypeRefAST(Token token);
 
     int getType() const override
@@ -48,6 +48,8 @@ public:
     }
 
     llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;
+
+    llvm::Type* getLLVMType();
 };
 
 class ExpressionAST : public AST
@@ -104,8 +106,8 @@ class ReturnAST : public AST
 {
     ExpressionAST* expr;
 public:
-    llvm::Type* func_ret_type;
-    ReturnAST(ExpressionAST*);
+    TypeRefAST* ret_type_ast;
+    ReturnAST(TypeRefAST*, ExpressionAST*);
 
     int getType() const override
     {
@@ -125,6 +127,37 @@ public:
     int getType() const override
     {
         return ASTType::Integer;
+    }
+
+    llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;
+};
+
+class VariableDefAST : public AST
+{
+public:
+    Token name;
+    TypeRefAST* type;
+    ExpressionAST* initial_value;
+
+    VariableDefAST() = default;
+
+    int getType() const override
+    {
+        return ASTType::VariableDef;
+    }
+
+    llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;
+};
+
+class VariableRefAST : public ExpressionAST
+{
+    Token token;
+public:
+    VariableRefAST(Token token);
+
+    int getType() const override
+    {
+        return ASTType::VariableRef;
     }
 
     llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;

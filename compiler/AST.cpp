@@ -14,7 +14,7 @@
 
 
 TypeRefAST::TypeRefAST(Token token)
-    : token(token)
+    : token(token), type(nullptr)
 {
 
 }
@@ -30,8 +30,13 @@ llvm::Value *TypeRefAST::genCode(llvm::IRBuilder<>& builder, llvm::Module* modul
     return nullptr;
 }
 
-ReturnAST::ReturnAST(ExpressionAST * expr)
-    : expr(expr), func_ret_type(nullptr)
+llvm::Type *TypeRefAST::getLLVMType()
+{
+    return type;
+}
+
+ReturnAST::ReturnAST(TypeRefAST* ret, ExpressionAST * expr)
+    : expr(expr), ret_type_ast(ret)
 {
 
 }
@@ -39,16 +44,26 @@ ReturnAST::ReturnAST(ExpressionAST * expr)
 llvm::Value *ReturnAST::genCode(llvm::IRBuilder<> &builder, llvm::Module *module)
 {
     auto expr_value = expr->genCode(builder, module);
+    auto ret_type = ret_type_ast->getLLVMType();
     llvm::Value* ret_value;
-    if (expr_value->getType()->getIntegerBitWidth() > func_ret_type->getIntegerBitWidth())
+    if (expr_value->getType()->isIntegerTy())
     {
-        // TODO: add warning for truncating value!
-        ret_value =  builder.CreateTruncOrBitCast(expr_value, func_ret_type);
+        if (expr_value->getType()->getIntegerBitWidth() > ret_type->getIntegerBitWidth())
+        {
+            // TODO: add warning for truncating value!
+            ret_value =  builder.CreateTruncOrBitCast(expr_value, ret_type);
+        }
+        else
+        {
+            ret_value = builder.CreateZExtOrBitCast(expr_value, ret_type);
+        }
     }
-    else
+    else if (llvm::isa<llvm::GlobalVariable>(expr_value))
     {
-        ret_value = builder.CreateZExtOrBitCast(expr_value, func_ret_type);
+        ret_value = builder.CreateLoad(expr_value);
+        //ret_value = dynamic_cast<llvm::GlobalVariable*>(expr_value)->stripPointerCasts();
     }
+
     builder.CreateRet(ret_value);
     return ret_value;
 }
@@ -79,11 +94,6 @@ llvm::Value *FunctionDefAST::genCode(llvm::IRBuilder<>& builder, llvm::Module* m
 
         for (AST* stmt : body)
         {
-            if (stmt->getType() == ASTType::ReturnStatement)
-            {
-                auto ret_ast = dynamic_cast<ReturnAST*>(stmt);
-                ret_ast->func_ret_type = llvm_func_type->getReturnType();
-            }
             stmt->genCode(builder, module);
         }
     }
@@ -101,4 +111,32 @@ llvm::Value *FunctionProtoAST::genCode(llvm::IRBuilder<> &builder, llvm::Module 
 llvm::Value *ExpressionAST::genCode(llvm::IRBuilder<> &builder, llvm::Module *module)
 {
     return nullptr;
+}
+
+llvm::Value *VariableDefAST::genCode(llvm::IRBuilder<> &builder, llvm::Module *module)
+{
+    type->genCode(builder, module);
+    auto value = initial_value->genCode(builder, module);
+
+    // TODO: add support for local variable!
+    module->getOrInsertGlobal(name.getValue(), type->getLLVMType());
+    llvm::GlobalVariable *gv = module->getNamedGlobal(name.getValue());
+    if (llvm::isa<llvm::ConstantInt>(value))
+    {
+        gv->setInitializer(reinterpret_cast<llvm::ConstantInt*>(value));
+    }
+    gv->setLinkage(llvm::GlobalVariable::InternalLinkage); // TODO: deal with ExternalLinkage
+
+    return nullptr;
+}
+
+VariableRefAST::VariableRefAST(Token token)
+    : token(token)
+{
+
+}
+
+llvm::Value *VariableRefAST::genCode(llvm::IRBuilder<> &builder, llvm::Module *module)
+{
+    return module->getNamedGlobal(token.getValue());
 }
