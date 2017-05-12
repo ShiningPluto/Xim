@@ -19,9 +19,9 @@ enum ASTType
 {
     TypeRef,
     Expression,
-    AST_FUNCTION_DEF,
-    AST_FUNCTION_PROTO,
-    AST_RETURN,
+    FunctionDef,
+    FunctionProto,
+    ReturnStatement,
     Integer
 };
 
@@ -75,7 +75,7 @@ public:
 
     int getType() const override
     {
-        return ASTType::AST_FUNCTION_PROTO;
+        return ASTType::FunctionProto;
     }
 
     llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;
@@ -94,7 +94,7 @@ public:
 
     int getType() const override
     {
-        return ASTType::AST_FUNCTION_DEF;
+        return ASTType::FunctionDef;
     }
 
     llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;
@@ -104,11 +104,12 @@ class ReturnAST : public AST
 {
     ExpressionAST* expr;
 public:
+    llvm::Type* func_ret_type;
     ReturnAST(ExpressionAST*);
 
     int getType() const override
     {
-        return ASTType::AST_RETURN;
+        return ASTType::ReturnStatement;
     }
 
     llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;

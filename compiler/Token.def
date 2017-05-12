@@ -21,6 +21,7 @@ PUNCTUATOR(Comma,       ",")
 PUNCTUATOR(Colon,       ":")
 PUNCTUATOR(SemiColon,   ";")
 PUNCTUATOR(Arrow,       "->")
+PUNCTUATOR(Equal,       "=")
 
 // Keyword
 KEYWORD(Def,    "def")

@@ -31,15 +31,26 @@ llvm::Value *TypeRefAST::genCode(llvm::IRBuilder<>& builder, llvm::Module* modul
 }
 
 ReturnAST::ReturnAST(ExpressionAST * expr)
-    : expr(expr)
+    : expr(expr), func_ret_type(nullptr)
 {
 
 }
 
 llvm::Value *ReturnAST::genCode(llvm::IRBuilder<> &builder, llvm::Module *module)
 {
-    //return builder.CreateRet(expr->genCode(builder, module));
-    return expr->genCode(builder, module);
+    auto expr_value = expr->genCode(builder, module);
+    llvm::Value* ret_value;
+    if (expr_value->getType()->getIntegerBitWidth() > func_ret_type->getIntegerBitWidth())
+    {
+        // TODO: add warning for truncating value!
+        ret_value =  builder.CreateTruncOrBitCast(expr_value, func_ret_type);
+    }
+    else
+    {
+        ret_value = builder.CreateZExtOrBitCast(expr_value, func_ret_type);
+    }
+    builder.CreateRet(ret_value);
+    return ret_value;
 }
 
 IntegerAST::IntegerAST(llvm::ConstantInt * ptr)
@@ -68,11 +79,12 @@ llvm::Value *FunctionDefAST::genCode(llvm::IRBuilder<>& builder, llvm::Module* m
 
         for (AST* stmt : body)
         {
-            auto temp = stmt->genCode(builder, module);
-            if (stmt->getType() == ASTType::AST_RETURN)
+            if (stmt->getType() == ASTType::ReturnStatement)
             {
-                builder.CreateRet(builder.CreateTruncOrBitCast(temp, llvm_func_type->getReturnType()));
+                auto ret_ast = dynamic_cast<ReturnAST*>(stmt);
+                ret_ast->func_ret_type = llvm_func_type->getReturnType();
             }
+            stmt->genCode(builder, module);
         }
     }
 

@@ -131,7 +131,7 @@ void Parser::parse()
 AST* Parser::parseDefinition(std::vector<Token>::iterator& it)
 {
     auto name = *it; ++it;
-    eatOperator(it, TokenType::Colon);
+    eatOperator(it, TokenType::Equal);
     FunctionDefAST* result = nullptr;
 
     if (it->getType()==TokenType::Func)
