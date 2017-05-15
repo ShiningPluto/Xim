@@ -22,13 +22,23 @@ PUNCTUATOR(Colon,       ":")
 PUNCTUATOR(SemiColon,   ";")
 PUNCTUATOR(Arrow,       "->")
 PUNCTUATOR(Equal,       "=")
+PUNCTUATOR(Plus,        "+")
+PUNCTUATOR(Minus,       "-")
+PUNCTUATOR(Star,        "*")
+PUNCTUATOR(Slash,       "/")
 
 // Keyword
-KEYWORD(Def,    "def")
-KEYWORD(Func,   "func")
-KEYWORD(Int,    "int")
+KEYWORD(Byte,   "byte"  )
+KEYWORD(Const,  "const" )
+KEYWORD(Def,    "def"   )
+KEYWORD(Double, "double")
+KEYWORD(Float,  "float" )
+KEYWORD(Func,   "func"  )
+KEYWORD(Int,    "int"   )
+KEYWORD(Long,   "long"  )
 KEYWORD(Return, "return")
-KEYWORD(Var,    "var")
+KEYWORD(Short,  "short" )
+KEYWORD(Var,    "var"   )
 
 #undef KEYWORD
 #undef PUNCTUATOR

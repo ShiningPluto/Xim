@@ -19,10 +19,12 @@ enum ASTType
 {
     TypeRef,
     Expression,
+    Integer,
+    UnaryOperation,
+    BinaryOperation,
     FunctionDef,
     FunctionProto,
     ReturnStatement,
-    Integer,
     VariableDef,
     VariableRef
 };
@@ -50,19 +52,6 @@ public:
     llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;
 
     llvm::Type* getLLVMType();
-};
-
-class ExpressionAST : public AST
-{
-public:
-    ExpressionAST() = default;
-
-    int getType() const override
-    {
-        return ASTType::Expression;
-    }
-
-    llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;
 };
 
 class FunctionProtoAST : public AST
@@ -102,16 +91,14 @@ public:
     llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;
 };
 
-class ReturnAST : public AST
+class ExpressionAST : public AST
 {
-    ExpressionAST* expr;
 public:
-    TypeRefAST* ret_type_ast;
-    ReturnAST(TypeRefAST*, ExpressionAST*);
+    ExpressionAST() = default;
 
     int getType() const override
     {
-        return ASTType::ReturnStatement;
+        return ASTType::Expression;
     }
 
     llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;
@@ -127,6 +114,44 @@ public:
     int getType() const override
     {
         return ASTType::Integer;
+    }
+
+    llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;
+};
+
+class UnaryOperationAST : public ExpressionAST
+{
+public:
+
+    int getType() const override
+    {
+        return ASTType::UnaryOperation;
+    }
+
+    llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;
+};
+
+class BinaryOperationAST : public ExpressionAST
+{
+public:
+    int getType() const override
+    {
+        return ASTType::BinaryOperation;
+    }
+
+    llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;
+};
+
+class ReturnAST : public AST
+{
+    ExpressionAST* expr;
+public:
+    TypeRefAST* ret_type_ast;
+    ReturnAST(TypeRefAST*, ExpressionAST*);
+
+    int getType() const override
+    {
+        return ASTType::ReturnStatement;
     }
 
     llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;
