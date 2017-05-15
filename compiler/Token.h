@@ -13,7 +13,12 @@ enum TokenType
     Identifier,
     Number,
 
-    #define TOKEN(X) X,
+    Punctuator,
+    #define PUNCTUATOR(X, Y) X,
+    #include "Token.def"
+
+    Keyword,
+    #define KEYWORD(X, Y) X,
     #include "Token.def"
 };
 

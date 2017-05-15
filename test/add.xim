@@ -1,0 +1,6 @@
+var temp : int = 2;
+
+def main = func () -> int
+{
+    return temp + 1;
+}

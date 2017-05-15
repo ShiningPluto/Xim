@@ -64,7 +64,7 @@ std::ostream& operator<<(std::ostream& out, Token const& token)
             break;
         }
         default: {
-            if (token.type > TokenType::Equal)
+            if (token.type > TokenType::Keyword)
                 out << "Keyword: " << *token.value;
             else
                 out << "Punctuator: " << *token.value;

@@ -208,19 +208,34 @@ FunctionDefAST* Parser::parseFunctionDef(std::vector<Token>::iterator& it)
 ExpressionAST *Parser::parseExpression(std::vector<Token>::iterator &it)
 {
     ExpressionAST* result = nullptr;
+
     if (it->getType() == TokenType::Number) // integer literal
     {
-        llvm::APInt v(64, llvm::StringRef(it->getValue()), 10);
-        ++it;
-        eatOperator(it, TokenType::SemiColon);
+        auto bitwidth = llvm::APInt::getBitsNeeded(llvm::StringRef(it->getValue()), 10) + 1;
+        //bitwidth = (bitwidth + 31) / 32 * 32;
+        llvm::APInt v(bitwidth, llvm::StringRef(it->getValue()), 10);
         result = new IntegerAST(llvm::ConstantInt::get(context, v));
+        ++it;
     }
     else if(it->getType() == TokenType::Identifier) // global variable
     {
         result = new VariableRefAST(*it);
         ++it;
+    }
+
+    if (it->getType() == TokenType::Plus)
+    {
+        auto l = result;
+        auto o = *it;
+        ++it;
+        auto r = parseExpression(it);
+        result = new BinaryOperationAST(o, l, r);
+    }
+    else
+    {
         eatOperator(it, TokenType::SemiColon);
     }
+
     return result;
 }
 

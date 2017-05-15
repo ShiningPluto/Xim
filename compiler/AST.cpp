@@ -45,7 +45,7 @@ llvm::Value *ReturnAST::genCode(llvm::IRBuilder<> &builder, llvm::Module *module
 {
     auto expr_value = expr->genCode(builder, module);
     auto ret_type = ret_type_ast->getLLVMType();
-    llvm::Value* ret_value;
+    llvm::Value* ret_value(nullptr);
     if (expr_value->getType()->isIntegerTy())
     {
         if (expr_value->getType()->getIntegerBitWidth() > ret_type->getIntegerBitWidth())
@@ -61,7 +61,6 @@ llvm::Value *ReturnAST::genCode(llvm::IRBuilder<> &builder, llvm::Module *module
     else if (llvm::isa<llvm::GlobalVariable>(expr_value))
     {
         ret_value = builder.CreateLoad(expr_value);
-        //ret_value = dynamic_cast<llvm::GlobalVariable*>(expr_value)->stripPointerCasts();
     }
 
     builder.CreateRet(ret_value);
@@ -70,12 +69,12 @@ llvm::Value *ReturnAST::genCode(llvm::IRBuilder<> &builder, llvm::Module *module
 
 IntegerAST::IntegerAST(llvm::ConstantInt * ptr)
 {
-    value = ptr;
+    result = ptr;
 }
 
 llvm::Value *IntegerAST::genCode(llvm::IRBuilder<> &builder, llvm::Module *module)
 {
-    return value;
+    return result;
 }
 
 llvm::Value *FunctionDefAST::genCode(llvm::IRBuilder<>& builder, llvm::Module* module)
@@ -108,11 +107,6 @@ llvm::Value *FunctionProtoAST::genCode(llvm::IRBuilder<> &builder, llvm::Module 
     return nullptr;
 }
 
-llvm::Value *ExpressionAST::genCode(llvm::IRBuilder<> &builder, llvm::Module *module)
-{
-    return nullptr;
-}
-
 llvm::Value *VariableDefAST::genCode(llvm::IRBuilder<> &builder, llvm::Module *module)
 {
     type->genCode(builder, module);
@@ -123,6 +117,10 @@ llvm::Value *VariableDefAST::genCode(llvm::IRBuilder<> &builder, llvm::Module *m
     llvm::GlobalVariable *gv = module->getNamedGlobal(name.getValue());
     if (llvm::isa<llvm::ConstantInt>(value))
     {
+//        if (value->getType()->getIntegerBitWidth() < type->getLLVMType()->getIntegerBitWidth())
+//        {
+//            value = builder.CreateZExtOrBitCast(value, type->getLLVMType());
+//        }
         gv->setInitializer(reinterpret_cast<llvm::ConstantInt*>(value));
     }
     gv->setLinkage(llvm::GlobalVariable::InternalLinkage); // TODO: deal with ExternalLinkage
@@ -138,5 +136,64 @@ VariableRefAST::VariableRefAST(Token token)
 
 llvm::Value *VariableRefAST::genCode(llvm::IRBuilder<> &builder, llvm::Module *module)
 {
-    return module->getNamedGlobal(token.getValue());
+    result = module->getNamedGlobal(token.getValue());
+    if (llvm::isa<llvm::GlobalVariable>(result))
+    {
+        result = builder.CreateLoad(result);
+    }
+    return result;
+}
+
+llvm::Value *UnaryOperationAST::genCode(llvm::IRBuilder<> &builder, llvm::Module *module)
+{
+    operand->genCode(builder, module);
+    return result;
+}
+
+llvm::Value *BinaryOperationAST::genCode(llvm::IRBuilder<> &builder, llvm::Module *module)
+{
+    auto lhv = lhs->genCode(builder, module);
+    auto rhv = rhs->genCode(builder, module);
+
+    auto lht = lhv->getType();
+    auto rht = rhv->getType();
+    if (lht->isIntegerTy() && lht->isIntegerTy())
+    {
+        if (lht->getIntegerBitWidth() < rht->getIntegerBitWidth())
+        {
+            lhv = builder.CreateZExtOrBitCast(lhv, rht);
+        }
+        else
+        {
+            rhv = builder.CreateZExtOrBitCast(rhv, lht);
+        }
+    }
+    else
+    {
+        // TODO: deal with float!
+    }
+
+    if (op.getType() == TokenType::Plus)
+    {
+        result = builder.CreateAdd(lhv, rhv);
+    }
+    else if (op.getType() == TokenType::Minus)
+    {
+        result = builder.CreateSub(lhv, rhv);
+    }
+    else if (op.getType() == TokenType::Star)
+    {
+        result = builder.CreateMul(lhv, rhv);
+    }
+    else if (op.getType() == TokenType::Slash)
+    {
+        result = builder.CreateSDiv(lhv, rhv);
+    }
+    return result;
+}
+
+BinaryOperationAST::BinaryOperationAST(Token o, ExpressionAST *l, ExpressionAST *r)
+    : op(o), lhs(l), rhs(r)
+{
+
 }

@@ -93,6 +93,8 @@ public:
 
 class ExpressionAST : public AST
 {
+protected:
+    llvm::Value* result;
 public:
     ExpressionAST() = default;
 
@@ -101,12 +103,10 @@ public:
         return ASTType::Expression;
     }
 
-    llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;
 };
 
 class IntegerAST : public ExpressionAST
 {
-    llvm::Value* value;
     llvm::APSInt v;
 public:
     IntegerAST(llvm::ConstantInt*);
@@ -121,6 +121,8 @@ public:
 
 class UnaryOperationAST : public ExpressionAST
 {
+    Token op;
+    ExpressionAST* operand;
 public:
 
     int getType() const override
@@ -133,7 +135,12 @@ public:
 
 class BinaryOperationAST : public ExpressionAST
 {
+    Token op;
+    ExpressionAST* lhs;
+    ExpressionAST* rhs;
 public:
+    BinaryOperationAST(Token o, ExpressionAST* l, ExpressionAST* r);
+
     int getType() const override
     {
         return ASTType::BinaryOperation;
