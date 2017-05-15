@@ -101,15 +101,18 @@ void Parser::run()
     std::cout << token << "\n";
 
     parse();
+}
 
-    module = new llvm::Module("test", context);
+void Parser::generate(std::string const &filename)
+{
+    module = new llvm::Module("xim", context);
     for (AST* stmt : program)
     {
         stmt->genCode(builder, module);
     }
 
     std::error_code error_code;
-    llvm::raw_fd_ostream out("a.ll", error_code, llvm::sys::fs::OpenFlags::F_RW);
+    llvm::raw_fd_ostream out(filename, error_code, llvm::sys::fs::OpenFlags::F_RW);
     module->print(out, nullptr);
     module->dump();
 }

@@ -34,6 +34,8 @@ public:
 
     void parse();
 
+    void generate(std::string const& filename);
+
     AST* parseDefinition(TokenVector::iterator& it);
 
     FunctionDefAST* parseFunctionDef(TokenVector::iterator& it);
