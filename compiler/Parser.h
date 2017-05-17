@@ -43,4 +43,6 @@ public:
     ExpressionAST* parseExpression(TokenVector::iterator& it);
 
     VariableDefAST* parseVariableDef(TokenVector::iterator& it);
+
+    VariableDefAST* parseStackVariableDef(TokenVector::iterator& it);
 };

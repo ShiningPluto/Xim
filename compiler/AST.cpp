@@ -197,3 +197,10 @@ BinaryOperationAST::BinaryOperationAST(Token o, ExpressionAST *l, ExpressionAST 
 {
 
 }
+
+llvm::Value *FunctionCallAST::genCode(llvm::IRBuilder<> &builder, llvm::Module *module)
+{
+    llvm::Value* callee;
+    std::vector<llvm::Value*> callee_args;
+    return builder.CreateCall(callee, callee_args);
+}

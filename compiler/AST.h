@@ -24,6 +24,7 @@ enum ASTType
     BinaryOperation,
     FunctionDef,
     FunctionProto,
+    FunctionCall,
     ReturnStatement,
     VariableDef,
     VariableRef
@@ -144,6 +145,19 @@ public:
     int getType() const override
     {
         return ASTType::BinaryOperation;
+    }
+
+    llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;
+};
+
+class FunctionCallAST : public ExpressionAST
+{
+    Token name;
+    std::vector<ExpressionAST*> args;
+public:
+    int getType() const override
+    {
+        return ASTType::FunctionCall;
     }
 
     llvm::Value* genCode(llvm::IRBuilder<>& builder, llvm::Module* module) override;

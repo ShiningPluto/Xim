@@ -1,0 +1,10 @@
+def foo = func(int v) -> int
+{
+    var b : int = v * 3;
+    return b + 1;
+}
+
+def main = func() -> int
+{
+    return foo(2);
+}

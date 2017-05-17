@@ -198,9 +198,14 @@ FunctionDefAST* Parser::parseFunctionDef(std::vector<Token>::iterator& it)
             ++it;
             result->body.push_back(new ReturnAST(result->proto->return_type, parseExpression(it)));
         }
+        else if (it->getType() == TokenType::Var)
+        {
+            ++it;
+            result->body.push_back(parseStackVariableDef(it));
+        }
         else
         {
-            result->body.push_back(parseExpression(it));
+            throw std::exception();
         }
     }
     eatOperator(it, TokenType::RightBrace);
@@ -226,7 +231,7 @@ ExpressionAST *Parser::parseExpression(std::vector<Token>::iterator &it)
         ++it;
     }
 
-    if (it->getType() == TokenType::Plus)
+    if (it->getType() == TokenType::Plus || it->getType() == TokenType::Star)
     {
         auto l = result;
         auto o = *it;
@@ -253,4 +258,9 @@ VariableDefAST* Parser::parseVariableDef(std::vector<Token>::iterator &it)
     eatOperator(it, TokenType::Equal);
     result->initial_value = parseExpression(it);
     return result;
+}
+
+VariableDefAST *Parser::parseStackVariableDef(std::vector<Token>::iterator &it)
+{
+    return parseVariableDef(it);
 }
