@@ -39,6 +39,16 @@ public:
 
     Token(size_t l, size_t c, TokenType type_ = TokenType::Eof, std::string const* value_ = nullptr);
 
+    size_t getLine()
+    {
+        return line;
+    }
+
+    size_t getColume()
+    {
+        return column;
+    }
+
     TokenType getType()
     {
         return type;

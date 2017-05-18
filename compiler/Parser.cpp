@@ -18,7 +18,7 @@
 #include <locale>
 #include <fstream>
 #include <iostream>
-#include <map>
+#include <unordered_map>
 
 namespace
 {
@@ -30,6 +30,13 @@ namespace
 //        }
 //    }
 
+    const std::unordered_map<int, std::string> token_spells
+    {
+        #define PUNCTUATOR(X, Y) {TokenType::X, Y},
+        #define KEYWORD(X, Y) {TokenType::X, Y},
+        #include "Token.def"
+    };
+
     void eatOperator(std::vector<Token>::iterator &it, TokenType type)
     {
         if (it->getType() == type)
@@ -38,7 +45,8 @@ namespace
         }
         else
         {
-            std::cerr << "Expected token: \n";
+            std::cerr << it->getLine() << ":" << it->getColume() << " expect \"" << token_spells.at(type) << "\" \n";
+            throw std::exception();
         }
     }
 
