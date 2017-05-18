@@ -59,7 +59,7 @@ class FunctionProtoAST : public AST
 {
 public:
     std::vector<TypeRefAST*> parameter_types;
-    std::vector<Token*> parameter_names;
+    std::vector<std::string const*> parameter_names;
     TypeRefAST* return_type;
     llvm::FunctionType* type;
 

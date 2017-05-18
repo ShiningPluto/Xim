@@ -30,25 +30,20 @@ namespace
 //        }
 //    }
 
-    const std::unordered_map<int, std::string> token_spells
-    {
-        #define PUNCTUATOR(X, Y) {TokenType::X, Y},
-        #define KEYWORD(X, Y) {TokenType::X, Y},
-        #include "Token.def"
-    };
 
-    void eatOperator(std::vector<Token>::iterator &it, TokenType type)
-    {
-        if (it->getType() == type)
-        {
-            ++it;
-        }
-        else
-        {
-            std::cerr << it->getLine() << ":" << it->getColume() << " expect \"" << token_spells.at(type) << "\" \n";
-            throw std::exception();
-        }
-    }
+
+//    void eatOperator(std::vector<Token>::iterator &it, TokenType type)
+//    {
+//        if (it->getType() == type)
+//        {
+//            ++it;
+//        }
+//        else
+//        {
+//            std::cerr << it->getLine() << ":" << it->getColume() << " expect \"" << token_spells.at(type) << "\" \n";
+//            throw std::exception();
+//        }
+//    }
 
     llvm::LLVMContext context;
     llvm::IRBuilder<> builder(context);
@@ -99,14 +94,14 @@ Parser::Parser(std::string const& source)
 
 void Parser::run()
 {
-    auto token = lexer.nextToken();
-    while (token.getType() != TokenType::Eof)
-    {
-        tokens.push_back(token);
-        std::cout << token;
-        token = lexer.nextToken();
-    }
-    std::cout << token << "\n";
+//    auto token = lexer.nextToken();
+//    while (token.getType() != TokenType::Eof)
+//    {
+//        tokens.push_back(token);
+//        std::cout << token;
+//        token = lexer.nextToken();
+//    }
+//    std::cout << token << "\n";
 
     parse();
 }
@@ -127,148 +122,157 @@ void Parser::generate(std::string const &filename)
 
 void Parser::parse()
 {
-    auto it = tokens.begin();
+    auto t = lexer.nextToken();
 
-    while (it != tokens.end())
+    while (!t.is(TokenType::Eof))
     {
-        if (it->getType() == TokenType::Def)
+        if (t.is(TokenType::Def))
         {
-            ++it;
-            program.push_back(parseDefinition(it));
+            program.push_back(parseDefinition());
+
         }
-        else if (it->getType() == TokenType::Var)
+        else if (t.is(TokenType::Var))
         {
-            ++it;
-            program.push_back(parseVariableDef(it));
+            program.push_back(parseVariableDef());
         }
+        else
+        {
+            throw std::logic_error("Parser::parse()");
+        }
+
+        t = lexer.nextToken();
     }
 }
 
-AST* Parser::parseDefinition(std::vector<Token>::iterator& it)
+AST* Parser::parseDefinition()
 {
-    auto name = *it; ++it;
-    eatOperator(it, TokenType::Equal);
+    Token name = lexer.nextToken();
+    lexer.eatToken(TokenType::Equal);
     FunctionDefAST* result = nullptr;
 
-    if (it->getType()==TokenType::Func)
+    Token t = lexer.nextToken();
+    if (t.is(TokenType::Func))
     {
-        ++it;
-        result = parseFunctionDef(it);
+        result = parseFunctionDef();
         result->name = name;
+    }
+    else
+    {
+        throw std::logic_error("Unknown definition type");
     }
 
     return result;
 }
 
-FunctionDefAST* Parser::parseFunctionDef(std::vector<Token>::iterator& it)
+FunctionDefAST* Parser::parseFunctionDef()
 {
     auto result = new FunctionDefAST();
     result->proto = new FunctionProtoAST();
-    eatOperator(it, TokenType::LeftParen);
-    if (it->getType()!=TokenType::RightParen) // parameters
+    lexer.eatToken(TokenType::LeftParen);
+    auto t = lexer.nextToken();
+    if (!t.is(TokenType::RightParen)) // parameters
     {
         while (true)
         {
-            result->proto->parameter_types.push_back(new TypeRefAST(*it));
-            ++it;
-            if (it->getType()==TokenType::Identifier)
+            result->proto->parameter_types.push_back(new TypeRefAST(t));
+            t = lexer.nextToken();
+            if (t.is(TokenType::Identifier))
             {
-                result->proto->parameter_names.push_back(it.base());
-                ++it;
+                result->proto->parameter_names.push_back(&(t.getValue()));
             }
             else
             {
                 result->proto->parameter_names.push_back(nullptr);
-            }
-
-            if (it->getType() == TokenType::RightParen)
-            {
-                break;
-            }
-            else
-            {
-                eatOperator(it, TokenType::Comma);
+                if (t.is(TokenType::RightParen))
+                {
+                    break;
+                }
+                else if(t.is(TokenType::Comma))
+                {
+                    t = lexer.nextToken();
+                }
+                else
+                {
+                     throw std::logic_error("Incorrect function prototype");
+                }
             }
         }
     }
-    eatOperator(it, TokenType::RightParen);
 
-    eatOperator(it, TokenType::Arrow);
+    lexer.eatToken(TokenType::Arrow);
 
-    result->proto->return_type = new TypeRefAST(*it);
-    ++it;
+    result->proto->return_type = new TypeRefAST(lexer.nextToken());
 
-    eatOperator(it, TokenType::LeftBrace);
-    while (it->getType()!= TokenType::RightBrace)
+    lexer.eatToken(TokenType::LeftBrace);
+    t = lexer.nextToken();
+    while (!t.is(TokenType::RightBrace))
     {
-        if (it->getType() == TokenType::Return)
+        if (t.is(TokenType::Return))
         {
-            ++it;
-            result->body.push_back(new ReturnAST(result->proto->return_type, parseExpression(it)));
+            result->body.push_back(new ReturnAST(result->proto->return_type, parseExpression()));
         }
-        else if (it->getType() == TokenType::Var)
+        else if (t.is(TokenType::Var))
         {
-            ++it;
-            result->body.push_back(parseStackVariableDef(it));
+            result->body.push_back(parseStackVariableDef());
         }
         else
         {
-            throw std::exception();
+            throw std::logic_error("Unknown statement for function body!");
         }
+        t = lexer.nextToken();
     }
-    eatOperator(it, TokenType::RightBrace);
 
     return result;
 }
 
-ExpressionAST *Parser::parseExpression(std::vector<Token>::iterator &it)
+ExpressionAST *Parser::parseExpression()
 {
     ExpressionAST* result = nullptr;
+    auto t = lexer.nextToken();
 
-    if (it->getType() == TokenType::Number) // integer literal
+    if (t.is(TokenType::Number)) // integer literal
     {
-        auto bitwidth = llvm::APInt::getBitsNeeded(llvm::StringRef(it->getValue()), 10) + 1;
+        auto bitwidth = llvm::APInt::getBitsNeeded(llvm::StringRef(t.getValue()), 10) + 1;
         //bitwidth = (bitwidth + 31) / 32 * 32;
-        llvm::APInt v(bitwidth, llvm::StringRef(it->getValue()), 10);
+        llvm::APInt v(bitwidth, llvm::StringRef(t.getValue()), 10);
         result = new IntegerAST(llvm::ConstantInt::get(context, v));
-        ++it;
     }
-    else if(it->getType() == TokenType::Identifier) // global variable
+    else if(t.is(TokenType::Identifier)) // global variable
     {
-        result = new VariableRefAST(*it);
-        ++it;
+        result = new VariableRefAST(t);
     }
 
-    if (it->getType() == TokenType::Plus || it->getType() == TokenType::Star)
+    t = lexer.nextToken();
+    if (t.is(TokenType::Plus) || t.is(TokenType::Star))
     {
         auto l = result;
-        auto o = *it;
-        ++it;
-        auto r = parseExpression(it);
+        auto o = t;
+        auto r = parseExpression();
         result = new BinaryOperationAST(o, l, r);
     }
-    else
+    else if (!t.is(TokenType::SemiColon))
     {
-        eatOperator(it, TokenType::SemiColon);
+        throw std::logic_error("Expression must end with semicolon!");
     }
 
     return result;
 }
 
-VariableDefAST* Parser::parseVariableDef(std::vector<Token>::iterator &it)
+VariableDefAST* Parser::parseVariableDef()
 {
     auto result = new VariableDefAST();
-    result->name = *it;
-    ++it;
-    eatOperator(it, TokenType::Colon);
-    result->type = new TypeRefAST(*it);
-    ++it;
-    eatOperator(it, TokenType::Equal);
-    result->initial_value = parseExpression(it);
+    auto t = lexer.nextToken();
+
+    result->name = t;
+    lexer.eatToken(TokenType::Colon);
+    t = lexer.nextToken();
+    result->type = new TypeRefAST(t);
+    lexer.eatToken(TokenType::Equal);
+    result->initial_value = parseExpression();
     return result;
 }
 
-VariableDefAST *Parser::parseStackVariableDef(std::vector<Token>::iterator &it)
+VariableDefAST *Parser::parseStackVariableDef()
 {
-    return parseVariableDef(it);
+    return parseVariableDef();
 }

@@ -36,13 +36,13 @@ public:
 
     void generate(std::string const& filename);
 
-    AST* parseDefinition(TokenVector::iterator& it);
+    AST* parseDefinition();
 
-    FunctionDefAST* parseFunctionDef(TokenVector::iterator& it);
+    FunctionDefAST* parseFunctionDef();
 
-    ExpressionAST* parseExpression(TokenVector::iterator& it);
+    ExpressionAST* parseExpression();
 
-    VariableDefAST* parseVariableDef(TokenVector::iterator& it);
+    VariableDefAST* parseVariableDef();
 
-    VariableDefAST* parseStackVariableDef(TokenVector::iterator& it);
+    VariableDefAST* parseStackVariableDef();
 };

@@ -1,14 +1,13 @@
 #include "Lexer.h"
 
-#include "Token.h"
-
 #include <locale>
 #include <fstream>
 #include <iostream>
+#include <unordered_map>
 
 namespace
 {
-    // the ispunct in standard library can't handle char32_t correctly
+    /// the ispunct in standard library can't handle char32_t correctly
     inline bool isPunctuationCharacter(char32_t const& c)
     {
         return (0x21<=c && c<=0x2F) // 	!"#$%&'()*+,-./
@@ -31,6 +30,13 @@ namespace
         facet.out(state, begin.base(), end.base(), from_next, buffer.data(), buffer.data()+buffer.size(), to_next);
         return std::string(buffer.data());
     }
+
+    const std::unordered_map<int, std::string> token_spells
+     {
+        #define PUNCTUATOR(X, Y) {TokenType::X, Y},
+        #define KEYWORD(X, Y) {TokenType::X, Y},
+        #include "Token.def"
+     };
 }
 
 Lexer::Lexer()
@@ -46,6 +52,25 @@ void Lexer::setSource(std::vector<char32_t> const& source)
 }
 
 Token Lexer::nextToken()
+{
+    if (!buffer.empty())
+    {
+        auto& t = buffer.front();
+        buffer.pop();
+        return t;
+    }
+
+    return consumeSource();
+}
+
+Token Lexer::peek()
+{
+    Token t = consumeSource();
+    buffer.push(t);
+    return t;
+}
+
+Token Lexer::consumeSource()
 {
     // TODO: make sure that the input string dose not contain tab and the line end is \n
     while(it != source->end() && isspace(*it))
@@ -124,5 +149,16 @@ Token Lexer::nextToken()
         exit(-1);
     }
     return token;
+}
+
+void Lexer::eatToken(TokenType type)
+{
+    Token t = nextToken();
+
+    if (t.getType() != type)
+    {
+        std::cerr << t.getLine() << ":" << t.getColume() << " expect \"" << token_spells.at(type) << "\" \n";
+        throw std::exception();
+    }
 }
 

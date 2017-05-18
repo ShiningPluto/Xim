@@ -65,5 +65,10 @@ public:
         return *value;
     }
 
+    bool is(TokenType t)
+    {
+        return type == t;
+    }
+
     friend std::ostream& operator<<(std::ostream& out, Token const& token);
 };
