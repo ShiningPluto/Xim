@@ -10,6 +10,7 @@
 
 #include <string>
 #include <memory>
+#include <stack>
 
 class AST;
 
@@ -23,7 +24,7 @@ class Parser
     std::vector<char> source_u8;
     std::vector<char32_t> source_u32;
 
-    std::vector<Token> tokens;
+    std::stack<Token> buffer;
     std::vector<AST*> program;
     ASTVector ast_nodes;
 
@@ -42,7 +43,16 @@ public:
 
     ExpressionAST* parseExpression();
 
+    ExpressionAST* parseBaseExpression();
+
+    FunctionCallAST* parseFunctionCall();
+
     VariableDefAST* parseVariableDef();
 
     VariableDefAST* parseStackVariableDef();
+
+private:
+    Token nextToken();
+
+    void pushBack(Token const& t);
 };

@@ -84,13 +84,22 @@ llvm::Value *FunctionDefAST::genCode(llvm::IRBuilder<>& builder, llvm::Module* m
     auto llvm_func_type = proto->type;
     llvm_func = llvm::Function::Create(llvm_func_type, llvm::Function::LinkageTypes::ExternalLinkage, name.getValue(), module);
 
+    llvm::BasicBlock* entry = llvm::BasicBlock::Create(context, "entry", llvm_func);
+    builder.SetInsertPoint(entry);
+
+    // deal with the arguments allocation
+    if (!proto->parameter_types.empty())
+    {
+        auto it = llvm_func->arg_begin();
+        for (int i=0; i<proto->parameter_types.size(); ++i)
+        {
+            llvm::AllocaInst* inst = builder.CreateAlloca(proto->parameter_types[i]->type, 0, proto->parameter_names[i]->c_str());
+            builder.CreateStore(&*it, inst);
+        }
+    }
+
     // create function body
     {
-        llvm::BasicBlock* entry = llvm::BasicBlock::Create(context, "entry", llvm_func);
-        builder.SetInsertPoint(entry);
-
-        // TODO: deal with the arguments allocation
-
         for (AST* stmt : body)
         {
             stmt->genCode(builder, module);
@@ -103,7 +112,21 @@ llvm::Value *FunctionDefAST::genCode(llvm::IRBuilder<>& builder, llvm::Module* m
 llvm::Value *FunctionProtoAST::genCode(llvm::IRBuilder<> &builder, llvm::Module *module)
 {
     return_type->genCode(builder, module);
-    type = llvm::FunctionType::get(return_type->type, false);
+    if (parameter_types.empty())
+    {
+        type = llvm::FunctionType::get(return_type->type, false);
+    }
+    else
+    {
+        std::vector<llvm::Type*> args_llvm_type(parameter_types.size());
+        for (size_t t = 0; t< parameter_types.size(); ++t)
+        {
+            parameter_types[t]->genCode(builder, module);
+            args_llvm_type[t] = parameter_types[t]->getLLVMType();
+        }
+
+        type = llvm::FunctionType::get(return_type->getLLVMType(), args_llvm_type, false);
+    }
     return nullptr;
 }
 

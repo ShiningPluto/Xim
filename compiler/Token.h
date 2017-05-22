@@ -39,17 +39,17 @@ public:
 
     Token(size_t l, size_t c, TokenType type_ = TokenType::Eof, std::string const* value_ = nullptr);
 
-    size_t getLine()
+    size_t getLine() const
     {
         return line;
     }
 
-    size_t getColume()
+    size_t getColume() const
     {
         return column;
     }
 
-    TokenType getType()
+    TokenType getType() const
     {
         return type;
     }
@@ -60,12 +60,12 @@ public:
         value = value_;
     }
 
-    std::string const& getValue()
+    std::string const& getValue() const
     {
         return *value;
     }
 
-    bool is(TokenType t)
+    bool is(TokenType t) const
     {
         return type == t;
     }

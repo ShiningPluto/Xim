@@ -152,9 +152,12 @@ public:
 
 class FunctionCallAST : public ExpressionAST
 {
+public:
     Token name;
     std::vector<ExpressionAST*> args;
-public:
+
+    FunctionCallAST() = default;
+
     int getType() const override
     {
         return ASTType::FunctionCall;
