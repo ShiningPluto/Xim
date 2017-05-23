@@ -13,7 +13,8 @@ set(SOURCE_FILES
         compiler/Lexer.h compiler/Lexer.cpp
         compiler/Token.cpp compiler/Token.h
         compiler/Parser.cpp compiler/Parser.h
-        compiler/AST.h compiler/AST.cpp)
+        compiler/AST.h compiler/AST.cpp
+        compiler/CodeGen.cpp compiler/CodeGen.h)
 
 add_executable(compiler ${SOURCE_FILES})
 
